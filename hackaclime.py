@@ -6,6 +6,9 @@ import sys
 import random
 import time
 import threading
+import shutil
+import math
+import sched
 
 api_key = "YOUR_API_KEY"
 state = "main"
@@ -36,7 +39,7 @@ else:
                     callback(key)
         finally: termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
 
-class col:
+class color:
     MAIN = "\033[91m" # don't forget to add, may add more later (?)
     ERROR = ""
     DIALOG = ""
@@ -73,10 +76,36 @@ listener_thread = threading.Thread(target=key_listener, args=(handle_key,), daem
 listener_thread.start()
 
 while True:
-    size = os.get_terminal_size()
-    print(f"{col.MAIN}Main loop running fine :thumbsup:")
+    cols, lines = shutil.get_terminal_size((20, 20))
+    if lines <= 8:
+        print("Terminal is smaller than 8 lines!")
+        print("Please increase your terminal window size")
+        break
+    if cols <= 32:
+        print("Terminal smaller than 32 cols!")
+        print("Please increase your size.")
+        break
+
+    print("╔", end="")
+    if cols % 2 == 0:
+        for x in range(1, cols-3):
+            print("═", end="")
+        print("╗")
+    else:
+        for x in range(1, cols-4):
+            print("═", end="")
+        print("╗")
+
+    print("║", end = "")
+    for x in range(1, math.floor((cols-12)/2)):
+        print(" ", end = "")
+    print("HackaCLIme", end = "")
+    for x in range(1, math.floor((cols-12)/2)):
+        print(" ", end = "")
+    print("║")
+
     time.sleep(0.5) # bruh why isnt it in ms
 
 if False: # DISABLED DO NOT FORGET TO ENABLE
-    print(f"{col.MAIN} TEST COLOR (should be red)")
+    print(f"{color.MAIN} TEST COLOR (should be red)")
     print(read(get_today(), "data.username"))
