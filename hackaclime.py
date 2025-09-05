@@ -8,10 +8,23 @@ import time
 import threading
 import shutil
 import math
-import sched
+import configparser
+from pathlib import Path
+import schedule
 
-api_key = "YOUR_API_KEY"
-state = "main"
+config = configparser.ConfigParser()
+home = Path.home()
+
+if sys.platform.startswith("win"):
+    config_path = home / ".wakatime.cfg"
+else:
+    config_path = home / ".wakatime.cfg"
+    config.read(config_path)
+
+api_url = config["settings"]["api_url"]
+api_key = config["settings"]["api_key"]
+
+print(f"url {api_url} key {api_key}")
 
 if sys.platform.startswith("win"):
     import msvcrt
@@ -46,6 +59,10 @@ class color:
     KEYPRESS = ""
     BACKGROUND = ""
 
+class api_response:
+    ALLTIME = "unset"
+    TODAY = "unset"
+
 def get_alltime():
     alltime_response = requests.get("https://hackatime.hackclub.com/api/v1/users/my/stats", headers={"Authorization": f"Bearer {api_key}"})
     return alltime_response.json()
@@ -72,11 +89,24 @@ def handle_key(key: str):
     else:
         print(f"Pressed {key}")
 
+def request():
+    api_response.ALLTIME = get_alltime()
+    api_response.TODAY = get_today()
+    print("set data")
+
 listener_thread = threading.Thread(target=key_listener, args=(handle_key,), daemon = True)
 listener_thread.start()
 
+schedule.every(20).seconds.do(request)
+
 while True:
     cols, lines = shutil.get_terminal_size((20, 20))
+    schedule.run_pending()
+
+    if api_response.ALLTIME == "unset":
+        request()
+        print(f"{api_response.TODAY}")
+
     if lines <= 8:
         print("Terminal is smaller than 8 lines!")
         print("Please increase your terminal window size")
@@ -104,8 +134,6 @@ while True:
         print(" ", end = "")
     print("║")
 
-    time.sleep(0.5) # bruh why isnt it in ms
+    print(read(api_response.TODAY, "data.total_seconds"))
 
-if False: # DISABLED DO NOT FORGET TO ENABLE
-    print(f"{color.MAIN} TEST COLOR (should be red)")
-    print(read(get_today(), "data.username"))
+    time.sleep(0.5) # bruh why isnt it in ms
