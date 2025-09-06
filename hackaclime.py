@@ -22,6 +22,8 @@ api_url = config["settings"]["api_url"]
 api_key = config["settings"]["api_key"]
 
 doquit = False
+active = True
+other_user = False
 
 if sys.platform.startswith("win"):
     import msvcrt
@@ -52,6 +54,7 @@ else:
 class api_response:
     ALLTIME = "unset"
     TODAY = "unset"
+    PROJECT = "unset"
 
 """
 class color:
@@ -74,11 +77,23 @@ def get_today():
     today_response = requests.get(f"https://hackatime.hackclub.com/api/v1/users/my/stats?start_date={date}", headers={"Authorization": f"Bearer {api_key}"})
     return today_response.json()
 
-def read(data, path, default="Error: could not find parameter"):
+def get_allproj():
+    allproj_response = requests.get("https://hackatime.hackclub.com/api/v1/users/my/stats?limit=1&features=projects", headers={"Authorization": f"Bearer {api_key}"})
+    return allproj_response.json()
+
+def get_todayproj():
+    date = datetime.today().strftime('%Y-%m-%d')
+    todayproj_response = requests.get(f"https://hackatime.hackclub.com/api/v1/users/my/stats?limit=1&features=projects&start_date={date}", headers={"Authorization": f"Bearer {api_key}"})
+    return todayproj_response.json()
+
+def read(data, path, default="response parser brokey"):
     keys = path.split(".")
     for key in keys:
         if isinstance(data, dict):
             data = data.get(key, default)
+        elif isinstance(data, list):
+            index = int(key)
+            data = data[index]
         else:
             return default
     return data
@@ -89,12 +104,58 @@ def handle_key(key: str):
     elif key == "q":
         global doquit
         doquit = True
+    elif key == "u":
+        global other_user
+        other_user = True
     else:
         print(f"Pressed {key}")
 
 def request():
     api_response.ALLTIME = get_alltime()
     api_response.TODAY = get_today()
+    api_response.TODAYPROJ = get_todayproj()
+    api_response.ALLPROJ = get_allproj()
+
+def get_language_times(alltime, today):
+    # tuples: language_name, alltime_text, today_text
+    result = []
+    today_lookup = {lang["name"]: lang["text"] for lang in today["data"]["languages"]}
+
+    for lang in alltime["data"]["languages"]:
+        name = lang["name"]
+        alltime_text = lang["text"]
+        today_text = today_lookup.get(name, "0h 0m")
+        result.append((name, alltime_text, today_text))
+    
+    return result
+
+def get_user():
+    active = False
+    print("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n") #clear
+    print(f"╭──────────────────────────────╮")
+    print(f"│HackaCLIme: {read(api_response.TODAY, "data.username"):>18}│")
+    print(f"╞══════════════════════════════╡")
+    print(f"│Time Today: {read(api_response.TODAY, "data.human_readable_total"): <12}   of │")
+    print(f"│Total Time: {read(api_response.ALLTIME, "data.human_readable_total"): <12}      │")
+    print(f"╞══════════╤═══════╤═══════╤═══╡")
+    print(f"│Languages │ Today │ Total │ % │")
+    print(f"├┄┄┄┄┄┄┄┄┄┄┼┄┄┄┄┄┄┄┼┄┄┄┄┄┄┄┼┄┄┄┤")
+    print(f"│JavaScript│99h 59m│99h 59m│50%│")
+    print(f"│GDScript  │99h 59m│99h 59m│25%│")
+    print(f"│Hell      │66h 6m │99h 59m│25%│")
+    print(f"│    --    │ 0h 0m │ 0h 0m │ - │")
+    print(f"│    --    │ 0h 0m │ 0h 0m │ - │")
+    print(f"│    --    │ 0h 0m │ 0h 0m │ - │")
+    print(f"╞══════════╧═══════╧═══════╧═══╡")
+    print(f"│Top Projects                  │")
+    print(f"│today: {read(api_response.TODAYPROJ, "data.projects.0.name"):>22} │")
+    print(f"│today: {read(api_response.ALLPROJ, "data.projects.0.name"):>22} │")
+    print(f"╞══════════════════════════════╡")
+    print(f"│{input('''Who? ''')} │")
+    print(f"╰──────────────────────────────╯")
+    time.sleep(30)
+    other_user = False
+    active = True
 
 listener_thread = threading.Thread(target=key_listener, args=(handle_key,), daemon = True)
 listener_thread.start()
@@ -107,27 +168,48 @@ while True:
 
     if api_response.ALLTIME == "unset":
         request()
-        print(f"{api_response.ALLTIME}")
 
     if doquit == True:
         sys.exit(0)
 
-    if lines <= 16:
+    if lines < 16:
         print("Terminal is smaller than 16 lines!")
         print("Please increase your terminal window size")
-        break
-    if cols <= 32:
+        time.sleep(5)
+
+    elif cols < 32:
         print("Terminal smaller than 32 cols!")
         print("Please increase your size.")
-        break
-    print(f"a")
-    print(f"╭──────────────────────────────╮")
-    print(f"│          HackaCLIme          │")
-    print(f"╞══════════════════════════════╡")
-    print(f"│Time Today: {time.strftime("%H:%M:%S", time.gmtime(read(api_response.TODAY, "data.total_seconds"))): <10} out of │")
-    print(f"│Total Time: {time.strftime("%H:%M:%S", time.gmtime(read(api_response.ALLTIME, "data.total_seconds"))): <10}(H:M:S) │")
-    
-    time.sleep(0.5) # bruh why isnt it in ms
+        time.sleep(5)
+
+    elif other_user == True:
+        get_user()
+
+    elif active == True:
+        print("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n") #clear
+        print(f"╭──────────────────────────────╮")
+        print(f"│HackaCLIme: {read(api_response.TODAY, "data.username"):>18}│")
+        print(f"╞══════════════════════════════╡")
+        print(f"│Time Today: {read(api_response.TODAY, "data.human_readable_total"): <15}of │")
+        print(f"│Total Time: {read(api_response.ALLTIME, "data.human_readable_total"): <18}│")
+        print(f"╞══════════════╤═══════╤═══════╡")
+        print(f"│   Language   │ Today │ Total │")
+        print(f"├┄┄┄┄┄┄┄┄┄┄┄┄┄┄┼┄┄┄┄┄┄┄┼┄┄┄┄┄┄┄┤")
+
+        rows = get_language_times(api_response.ALLTIME, api_response.TODAY)
+
+        for lang_name, lang_alltime, lang_today in rows:
+            print(f"│{lang_name:^14}│{lang_today:^7}│{lang_alltime:^7}│")
+
+        print(f"╞══════════════╧═══════╧═══════╡")
+        print(f"│Top Projects                  │")
+        print(f"│today: {read(api_response.TODAYPROJ, "data.projects.0.name"):>15} {read(api_response.TODAYPROJ, "data.projects.0.text"):>7}│")
+        print(f"│total: {read(api_response.ALLPROJ, "data.projects.0.name"):>15} {read(api_response.ALLPROJ, "data.projects.0.text"):>7}│")
+        print(f"╞══════════╤════════╤══════════╡")
+        print(f"│[o]ptions │ [u]ser │ [q]uit :(│")
+        print(f"╰──────────┴────────┴──────────╯")
+
+        time.sleep(0.5) # bruh why isnt it in ms
 
 #saved this logic in case I need it, for now going to stick with 32*24
 """ 
