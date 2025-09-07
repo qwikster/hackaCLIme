@@ -18,6 +18,5 @@ build-backend = "uv_build"
 [project.scripts]
 hackaclime = "hackaclime.hackaclime:main"
 
-
 [tool.setuptools.packages.find]
 where = ["src"]
