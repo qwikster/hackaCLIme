@@ -198,7 +198,9 @@ def get_language_times(alltime, today):
 def get_user():
     print("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n") #clear
     print(f"{color.BORDER}╭──────────────────────────────╮")
-    print(f"│{color.TITLE}HackaCLIme: {color.TEXT}{read(api_response.TODAY, "data.username"):>18}{color.BORDER}│")
+    username = read(api_response.TODAY, "data.username")
+    username = username[:18]
+    print(f"│{color.TITLE}HackaCLIme: {color.TEXT}{username:>18}{color.BORDER}│")
     print("╞══════════════════════════════╡")
     if read(api_response.TODAY, "data.human_readable_total") != "":
         print(f"│{color.TITLE}Time Today: {color.TIME}{read(api_response.TODAY, "data.human_readable_total"): <15}{color.TITLE}of {color.BORDER}│")
@@ -213,15 +215,21 @@ def get_user():
 
     for lang_name, lang_alltime, lang_today in rows:
         if int(lang_alltime.translate(str.maketrans("", "", "hm "))) > 10:
+            lang_name = lang_name[:13]
             print(f"│{color.TEXT}{lang_name:^13}{color.BORDER}│{color.TIME}{lang_today:^7}{color.BORDER}│{color.TIME}{lang_alltime:^8}{color.BORDER}│")
 
     print("╞═════════════╧═══════╧════════╡")
     print(f"│{color.TITLE}Top Projects                  {color.BORDER}│")
+    proj_name = "error?"
+    proja_name = "error?"
     if read(api_response.TODAYPROJ, "data.projects.0.text") != "No work today!":
-        print(f"│{color.TITLE}today: {color.TEXT}{read(api_response.TODAYPROJ, "data.projects.0.name"):>14}  {color.TIME}{read(api_response.TODAYPROJ, "data.projects.0.text"):>7}{color.BORDER}│")
+        proj_name = read(api_response.TODAYPROJ, "data.projects.0.name")
+        proj_name = proj_name[:14]
+        print(f"│{color.TITLE}today: {color.TEXT}{proj_name:>14}  {color.TIME}{read(api_response.TODAYPROJ, "data.projects.0.text"):>7}{color.BORDER}│")
     else:
         print(f"│{color.TITLE}today:    {color.ERROR}No work done today! {color.BORDER}│")
-    print(f"│{color.TITLE}total: {color.TEXT}{read(api_response.ALLPROJ, "data.projects.0.name"):>14} {color.TIME}{read(api_response.ALLPROJ, "data.projects.0.text"):>8}{color.BORDER}│")
+    proja_name = read(api_response.ALLPROJ, "data.projects.0.name")
+    proja_name = proja_name[:14]
     print("╰──────────────────────────────╯\n")
     print(f"{color.TITLE}Type {color.TEXT}\"my\" {color.TITLE}for your profile.")
     try:
@@ -354,65 +362,88 @@ def create_theme():
         with open(theme_path, 'w') as configfile:
             themes.write(configfile)
 
-listener_thread = threading.Thread(target=key_listener, args=(handle_key,), daemon = True)
-listener_thread.start()
+def main():
+    global listener_thread, fd, old_settings, listening
 
-sys.excepthook = handle_exception
+    sys.excepthook = handle_exception
 
-schedule.every(20).seconds.do(request)
+    listener_thread = threading.Thread(target=key_listener, args=(handle_key,), daemon=True)
+    listener_thread.start()
 
-load_theme(themes, themes["DEFAULT"]["currenttheme"])
+    schedule.every(20).seconds.do(request)
 
-while True:
-    cols, lines = shutil.get_terminal_size((20, 20))
-    schedule.run_pending()
+    load_theme(themes, themes["DEFAULT"]["currenttheme"])
 
-    if api_response.ALLTIME == "unset":
-        request()
+    try:
+        while True:
+            cols, lines = shutil.get_terminal_size((20, 20))
+            schedule.run_pending()
 
-    if doquit:
-        sys.exit(0)
+            if api_response.ALLTIME == "unset":
+                request()
 
-    if lines < 16:
-        print("Terminal is smaller than 16 lines!")
-        print("Please increase your terminal window size")
-        time.sleep(5)
+            if doquit:
+                sys.exit(0)
 
-    elif cols < 32:
-        print("Terminal smaller than 32 cols!")
-        print("Please increase your size.")
-        time.sleep(5)
+            if lines < 16:
+                print("Terminal is smaller than 16 lines!")
+                print("Please increase your terminal window size")
+                time.sleep(5)
+                continue
 
-    elif active:
-        print("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n") #clear
-        print(f"{color.BORDER}╭──────────────────────────────╮")
-        print(f"│{color.TITLE}HackaCLIme: {color.TEXT}{read(api_response.TODAY, "data.username"):>18}{color.BORDER}│")
-        print("╞══════════════════════════════╡")
-        if read(api_response.TODAY, "data.human_readable_total") != "":
-            print(f"│{color.TITLE}Time Today: {color.TIME}{read(api_response.TODAY, "data.human_readable_total"): <15}{color.TITLE}of {color.BORDER}│")
-        else:
-            print(f"│{color.TITLE}Time Today: {color.ERROR}No time today!    {color.BORDER}│")
-        print(f"│{color.TITLE}Total Time: {color.TIME}{read(api_response.ALLTIME, "data.human_readable_total"): <18}{color.BORDER}│")
-        print("╞═════════════╤═══════╤════════╡")
-        print(f"│   {color.TITLE}Language  {color.BORDER}│ {color.TITLE}Today {color.BORDER}│ {color.TITLE}Total  {color.BORDER}│")
-        print("├┄┄┄┄┄┄┄┄┄┄┄┄┄┼┄┄┄┄┄┄┄┼┄┄┄┄┄┄┄┄┤")
+            if cols < 32:
+                print("Terminal smaller than 32 cols!")
+                print("Please increase your size.")
+                time.sleep(5)
+                continue
 
-        rows = get_language_times(api_response.ALLTIME, api_response.TODAY)
+            if active:
+                print("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n")
+                print(f"{color.BORDER}╭──────────────────────────────╮")
+                username = read(api_response.TODAY, "data.username")
+                username = username[:18]
+                print(f"│{color.TITLE}HackaCLIme: {color.TEXT}{username:>18}{color.BORDER}│")
+                print("╞══════════════════════════════╡")
+                if read(api_response.TODAY, "data.human_readable_total") != "":
+                    print(f"│{color.TITLE}Time Today: {color.TIME}{read(api_response.TODAY, 'data.human_readable_total'): <15}{color.TITLE}of {color.BORDER}│")
+                else:
+                    print(f"│{color.TITLE}Time Today: {color.ERROR}No time today!    {color.BORDER}│")
+                print(f"│{color.TITLE}Total Time: {color.TIME}{read(api_response.ALLTIME, 'data.human_readable_total'): <18}{color.BORDER}│")
+                print("╞═════════════╤═══════╤════════╡")
+                print(f"│   {color.TITLE}Language  {color.BORDER}│ {color.TITLE}Today {color.BORDER}│ {color.TITLE}Total  {color.BORDER}│")
+                print("├┄┄┄┄┄┄┄┄┄┄┄┄┄┼┄┄┄┄┄┄┄┼┄┄┄┄┄┄┄┄┤")
 
-        for lang_name, lang_alltime, lang_today in rows:
-            if int(lang_alltime.translate(str.maketrans("", "", "hm "))) > 10:
-                lang_name = lang_name[:13]
-                print(f"│{color.TEXT}{lang_name:^13}{color.BORDER}│{color.TIME}{lang_today:^7}{color.BORDER}│{color.TIME}{lang_alltime:^8}{color.BORDER}│")
+                rows = get_language_times(api_response.ALLTIME, api_response.TODAY)
 
-        print("╞═════════════╧═══════╧════════╡")
-        print(f"│{color.TITLE}Top Projects                  {color.BORDER}│")
-        if read(api_response.TODAYPROJ, "data.projects.0.text") != "No work today!":
-            print(f"│{color.TITLE}today: {color.TEXT}{read(api_response.TODAYPROJ, "data.projects.0.name"):>14}  {color.TIME}{read(api_response.TODAYPROJ, "data.projects.0.text"):>7}{color.BORDER}│")
-        else:
-            print(f"│{color.TITLE}today:    {color.ERROR}No work done today! {color.BORDER}│")
-        print(f"│{color.TITLE}total: {color.TEXT}{read(api_response.ALLPROJ, "data.projects.0.name"):>14} {color.TIME}{read(api_response.ALLPROJ, "data.projects.0.text"):>8}{color.BORDER}│")
-        print("╞══════════╤════════╤══════════╡")
-        print(f"│ {color.TITLE}[{color.BOLD}{color.UNDERLINE}{color.ERROR}t{color.RESET}{color.TITLE}]hemes {color.BORDER}│ {color.TITLE}[{color.BOLD}{color.UNDERLINE}{color.ERROR}u{color.RESET}{color.TITLE}]ser {color.BORDER}│ {color.TITLE}[{color.BOLD}{color.UNDERLINE}{color.ERROR}q{color.RESET}{color.TITLE}]uit {color.ERROR}:({color.BORDER}│")
-        print("╰──────────┴────────┴──────────╯")
+                for lang_name, lang_alltime, lang_today in rows:
+                    if int(lang_alltime.translate(str.maketrans("", "", "hm "))) > 10:
+                        lang_name = lang_name[:13]
+                        print(f"│{color.TEXT}{lang_name:^13}{color.BORDER}│{color.TIME}{lang_today:^7}{color.BORDER}│{color.TIME}{lang_alltime:^8}{color.BORDER}│")
 
-        time.sleep(1) # customize speed?
+                print("╞═════════════╧═══════╧════════╡")
+                print(f"│{color.TITLE}Top Projects                  {color.BORDER}│")
+                if read(api_response.TODAYPROJ, "data.projects.0.text") != "No work today!":
+                    proj_name = read(api_response.TODAYPROJ, "data.projects.0.name")[:14]
+                    print(f"│{color.TITLE}today: {color.TEXT}{proj_name:>14}  {color.TIME}{read(api_response.TODAYPROJ, 'data.projects.0.text'):>7}{color.BORDER}│")
+                else:
+                    print(f"│{color.TITLE}today:    {color.ERROR}No work done today! {color.BORDER}│")
+                proja_name = read(api_response.ALLPROJ, "data.projects.0.name")[:14]
+                print(f"│{color.TITLE}total: {color.TEXT}{proja_name:>14} {color.TIME}{read(api_response.ALLPROJ, 'data.projects.0.text'):>8}{color.BORDER}│")
+                print("╞══════════╤════════╤══════════╡")
+                print(f"│ {color.TITLE}[{color.BOLD}{color.UNDERLINE}{color.ERROR}t{color.RESET}{color.TITLE}]hemes {color.BORDER}│ {color.TITLE}[{color.BOLD}{color.UNDERLINE}{color.ERROR}u{color.RESET}{color.TITLE}]ser {color.BORDER}│ {color.TITLE}[{color.BOLD}{color.UNDERLINE}{color.ERROR}q{color.RESET}{color.TITLE}]uit {color.ERROR}:({color.BORDER}│")
+                print("╰──────────┴────────┴──────────╯")
+
+            time.sleep(1)
+
+    finally:
+        # clean up in terminal? probably not required
+        if not sys.platform.startswith("win") and 'old_settings' in globals() and old_settings is not None:
+            try:
+                import termios
+                termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
+            except Exception:
+                pass
+
+
+if __name__ == "__main__":
+    main()
