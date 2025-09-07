@@ -233,47 +233,115 @@ def get_user():
 
 def theme_menu():
     global themes
+    global theme_path
+    while(1):
+        print("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n")
+        print(f"{color.BORDER}╭──────────────────────────────╮")
+        print(f"│ {color.TITLE}HackaCLIme:     {color.TEXT}Change Theme{color.BORDER} │")
+        print(f"╞══════════════════════════════╡")
 
-    print("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n")
-    print(f"{color.BORDER}╭──────────────────────────────╮")
-    print(f"│ {color.TITLE}HackaCLIme:     {color.TEXT}Change Theme{color.BORDER} │")
-    print(f"╞══════════════════════════════╡")
+        i = 0
+        themelist = []
+        for index in themes:
+            themelist.append(index)
+            if index != "DEFAULT":
+                if index == themes["DEFAULT"]["currenttheme"]:
+                    print(f"│{color.TIME}{i:>2} {color.TITLE}(Current): {color.TEXT}{themes["DEFAULT"]["currenttheme"]:>15} {color.BORDER}│")
+                else:
+                    print(f"│{color.TIME}{i:>2}: {color.TEXT}{index:>25} {color.BORDER}│")
+            i += 1
+        
+        print(f"╞═══════════╤═══════════╤══════╡")
+        print(f"│{color.TITLE}Type number{color.BORDER}│{color.TITLE}[{color.ERROR}{color.UNDERLINE}{color.BOLD}n{color.RESET}{color.TITLE}]ew theme{color.BORDER}│{color.TITLE}[{color.ERROR}{color.UNDERLINE}{color.BOLD}b{color.RESET}{color.TITLE}]ack{color.BORDER}│")
+        print(f"╰───────────┴───────────┴──────╯")
+        num = safe_input(f"{color.TITLE}> ")
+        if num == "n":
+            create_theme()
+            break
+        elif num == "b":
+            break
+        elif num.isdigit():
+            if (int(num) > len(themelist) - 1) or (int(num) < 1):
+                print(f"{color.ERROR}Not an option, learn to count!")
+                time.sleep(2)
+                break
+            pass
+        else:
+            print(f"{color.ERROR}Invalid input!")
+            break
 
-    i = 0
-    themelist = []
-    for index in themes:
-        themelist.append(index)
-        if index != "DEFAULT":
-            if index == themes["DEFAULT"]["currenttheme"]:
-                print(f"│{color.TIME}{i:>2} {color.TITLE}(Current): {color.TEXT}{themes["DEFAULT"]["currenttheme"]:>15} {color.BORDER}│")
+        theme = themelist[int(num)]
+        times = themes[theme]["time"].split(", ")
+        text = themes[theme]["text"].split(", ")
+        title = themes[theme]["title"].split(", ")
+        error = themes[theme]["error"].split(", ")
+        border = themes[theme]["border"].split(", ")
+
+        print(f"{color.BORDER}╭──────────────────────────────╮")
+        print(f"{color.BORDER}│ {color.TITLE}Theme:       {color.TEXT}{theme:>16}{color.BORDER}│")
+        print(f"{color.BORDER}╞══════════════════════════════╡")
+        print(f"{color.BORDER}│ {color.TITLE}Numbers and time: \x1b[38;2;{times[0]};{times[1]};{times[2]}m69h 42m 0s{color.BORDER} │")
+        print(f"{color.BORDER}│ {color.TITLE}Variable text fields: \x1b[38;2;{text[0]};{text[1]};{text[2]}mabc123{color.BORDER} │")
+        print(f"{color.BORDER}│ {color.TITLE}Titles and prompts: \x1b[38;2;{title[0]};{title[1]};{title[2]}mTitle123{color.BORDER} │")
+        print(f"{color.BORDER}│ {color.TITLE}Error/bad messages: \x1b[38;2;{error[0]};{error[1]};{error[2]}m Oopsies{color.BORDER} │")
+        print(f"{color.BORDER}│ {color.TITLE}Program box borders: \x1b[38;2;{border[0]};{border[1]};{border[2]}m╞╪╡░▒▓█{color.BORDER} │")
+        print(f"{color.BORDER}╞════════════╤═════╤════╤══════╡")
+        print(f"{color.BORDER}│ {color.TITLE}Use theme? {color.BORDER}│{color.TITLE}[{color.ERROR}{color.UNDERLINE}{color.BOLD}y{color.RESET}{color.TITLE}]es{color.BORDER}│{color.TITLE}[{color.ERROR}{color.UNDERLINE}{color.BOLD}n{color.RESET}{color.TITLE}]o{color.BORDER}│{color.TITLE}[{color.ERROR}{color.UNDERLINE}{color.BOLD}b{color.RESET}{color.TITLE}]ack{color.BORDER}│")
+        print(f"╰────────────┴─────┴────┴──────╯")
+        choice = safe_input(f"{color.TITLE}> ")
+        if choice == "y":
+            load_theme(themes, theme)
+            themes["DEFAULT"]["currenttheme"] = theme
+            with open(theme_path, 'w') as configfile:
+                themes.write(configfile)
+            print("Success!")
+            break
+        elif choice == "b":
+            break
+        elif choice == "n":
+            pass
+        else:
+            print(f"{color.ERROR}Invalid input!")
+            time.sleep(2)
+            break
+
+def create_theme():
+    global theme_path
+    global themes
+    print(f"{color.TITLE}Creating new theme...")
+    print(f"{color.TITLE}Input {color.ERROR}r, g, b{color.TITLE} / {color.ERROR}hex{color.TITLE} only. (No {color.ERROR}#{color.TITLE})")
+    print(f"{color.TITLE}(Don't forget commas for RGB!)\n")
+    print(f"{color.TITLE}Choose a name for your theme")
+    print(f"{color.TITLE}(lowercase, alphanumeric)\n")
+    name = safe_input("> ")
+    themes[name] = {}
+    for index in ["time", "text", "title", "error", "border"]:
+        while(1):
+            print(f"{color.TITLE}Input color for {index}s...")
+            choice = safe_input(f"{color.TITLE}> ")
+            if "," in choice:
+                col = choice.split(", ")
+                print(f"\x1b[38;2;{col[0]};{col[1]};{col[2]}mIs this the correct color?")
+                yn = safe_input("y/n > ")
+                if yn == "y":
+                    break
+                else:
+                    pass
+            elif len(choice) == 6:
+                col = tuple(int(choice[i:i+2], 16) for i in (0, 2, 4))  
+                r, g, b = col
+                col = f"{r}, {g}, {b}"
+                print(f"\x1b[38;2;{r};{g};{b}mIs this the correct color? ░▒▓█")
+                yn = safe_input("y/n > ")
+                if yn == "y":
+                    break
+                else:
+                    pass
             else:
-                print(f"│{color.TIME}{i:>2}: {color.TEXT}{index:>25} {color.BORDER}│")
-        i += 1
-    
-    print(f"╞══════════════════════════════╡")
-    print(f"│{color.TITLE}Select theme's number to view {color.BORDER}│")
-    print(f"╰──────────────────────────────╯")
-    num = safe_input(f"{color.TITLE}> ")
-    
-    theme = themelist[int(num)]
-    time = themes[theme]["time"].split(", ")
-    text = themes[theme]["text"].split(", ")
-    title = themes[theme]["title"].split(", ")
-    error = themes[theme]["error"].split(", ")
-    border = themes[theme]["border"].split(", ")
-
-    print(f"{color.BORDER}╭──────────────────────────────╮")
-    print(f"{color.BORDER}│ {color.TITLE}Theme:       {color.TEXT}{theme:>16}{color.BORDER}│")
-    print(f"{color.BORDER}╞══════════════════════════════╡")
-    print(f"{color.BORDER}│ {color.TITLE}Numbers and time: \x1b[38;2;{time[0]};{time[1]};{time[2]}m69h 42m 0s{color.BORDER} │")
-    print(f"{color.BORDER}│ {color.TITLE}Variable text fields: \x1b[38;2;{text[0]};{text[1]};{text[2]}mabc123{color.BORDER} │")
-    print(f"{color.BORDER}│ {color.TITLE}Titles and prompts: \x1b[38;2;{title[0]};{title[1]};{title[2]}mTitle123{color.BORDER} │")
-    print(f"{color.BORDER}│ {color.TITLE}Error/bad messages: \x1b[38;2;{error[0]};{error[1]};{error[2]}m Oopsies{color.BORDER} │")
-    print(f"{color.BORDER}│ {color.TITLE}Program box borders: \x1b[38;2;{border[0]};{border[1]};{border[2]}m╞╪╡░▒▓█{color.BORDER} │")
-    print(f"{color.BORDER}╞════════════╤═════╤════╤══════╡")
-    print(f"{color.BORDER}│{color.TITLE}Load theme? {color.BORDER}│{color.TITLE}[{color.ERROR}{color.UNDERLINE}{color.BOLD}y{color.RESET}{color.TITLE}]es{color.BORDER}│{color.TITLE}[{color.ERROR}{color.UNDERLINE}{color.BOLD}n{color.RESET}{color.TITLE}]o{color.BORDER}│{color.TITLE}[{color.ERROR}{color.UNDERLINE}{color.BOLD}b{color.RESET}{color.TITLE}]ack{color.BORDER}│")
-    print(f"╰────────────┴─────┴────┴──────╯")
-    safe_input(f"{color.TITLE}> ")
+                print("Invalid string? Try again")
+        themes[name][index] = col
+        with open(theme_path, 'w') as configfile:
+            themes.write(configfile)
 
 listener_thread = threading.Thread(target=key_listener, args=(handle_key,), daemon = True)
 listener_thread.start()
