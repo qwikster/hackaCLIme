@@ -228,7 +228,11 @@ def get_user():
     print(f"│{color.TITLE}total: {color.TEXT}{read(api_response.ALLPROJ, "data.projects.0.name"):>14} {color.TIME}{read(api_response.ALLPROJ, "data.projects.0.text"):>8}{color.BORDER}│")
     print(f"╰──────────────────────────────╯\n")
     print(f"{color.TITLE}Type {color.TEXT}\"my\" {color.TITLE}for your profile.")
-    user = safe_input(f"{color.ERROR}Slack member ID? ")
+    try:
+        user = safe_input(f"{color.ERROR}Slack member ID? ")
+    except:
+        print("Invalid user,\ndid you use special chars?")
+        return "my"
     return user
 
 def theme_menu():
@@ -268,6 +272,7 @@ def theme_menu():
             pass
         else:
             print(f"{color.ERROR}Invalid input!")
+            time.sleep(2)
             break
 
         theme = themelist[int(num)]
@@ -314,29 +319,39 @@ def create_theme():
     print(f"{color.TITLE}Choose a name for your theme")
     print(f"{color.TITLE}(lowercase, alphanumeric)\n")
     name = safe_input("> ")
+    name = name.translate(str.maketrans('', '', "!@#$%^&*()[]\"\'/}{"))
     themes[name] = {}
     for index in ["time", "text", "title", "error", "border"]:
         while(1):
             print(f"{color.TITLE}Input color for {index}s...")
             choice = safe_input(f"{color.TITLE}> ")
             if "," in choice:
-                col = choice.split(", ")
-                print(f"\x1b[38;2;{col[0]};{col[1]};{col[2]}mIs this the correct color?")
-                yn = safe_input("y/n > ")
-                if yn == "y":
-                    break
-                else:
+                try:
+                    col = choice.split(", ")
+                    print(f"\x1b[38;2;{col[0]};{col[1]};{col[2]}mIs this the correct color?")
+                    yn = safe_input("y/n > ")
+                    if yn == "y":
+                        break
+                    else:
+                        pass
+                except ValueError:
+                    print("Invalid value, try again...")
+                    time.sleep(2)
                     pass
             elif len(choice) == 6:
-                col = tuple(int(choice[i:i+2], 16) for i in (0, 2, 4))  
-                r, g, b = col
-                col = f"{r}, {g}, {b}"
-                print(f"\x1b[38;2;{r};{g};{b}mIs this the correct color? ░▒▓█")
-                yn = safe_input("y/n > ")
-                if yn == "y":
-                    break
-                else:
-                    pass
+                try:
+                    col = tuple(int(choice[i:i+2], 16) for i in (0, 2, 4))  
+                    r, g, b = col
+                    col = f"{r}, {g}, {b}"
+                    print(f"\x1b[38;2;{r};{g};{b}mIs this the correct color? ░▒▓█")
+                    yn = safe_input("y/n > ")
+                    if yn == "y":
+                        break
+                    else:
+                        pass
+                except ValueError:
+                    print("Invalid value, try again...")
+                    time.sleep(2)
             else:
                 print("Invalid string? Try again")
         themes[name][index] = col
