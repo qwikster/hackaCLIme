@@ -278,7 +278,7 @@ def theme_menu():
         border = themes[theme]["border"].split(", ")
 
         print(f"{color.BORDER}╭──────────────────────────────╮")
-        print(f"{color.BORDER}│ {color.TITLE}Theme:       {color.TEXT}{theme:>16}{color.BORDER}│")
+        print(f"{color.BORDER}│ {color.TITLE}Theme: {color.TEXT}{theme:>21}{color.BORDER} │")
         print(f"{color.BORDER}╞══════════════════════════════╡")
         print(f"{color.BORDER}│ {color.TITLE}Numbers and time: \x1b[38;2;{times[0]};{times[1]};{times[2]}m69h 42m 0s{color.BORDER} │")
         print(f"{color.BORDER}│ {color.TITLE}Variable text fields: \x1b[38;2;{text[0]};{text[1]};{text[2]}mabc123{color.BORDER} │")
@@ -349,6 +349,8 @@ listener_thread.start()
 sys.excepthook = handle_exception
 
 schedule.every(20).seconds.do(request)
+
+load_theme(themes, themes["DEFAULT"]["currenttheme"])
 
 while True:
     cols, lines = shutil.get_terminal_size((20, 20))
