@@ -226,7 +226,7 @@ def get_user():
     print(f"{color.TITLE}Type {color.TEXT}\"my\" {color.TITLE}for your profile.")
     try:
         user = safe_input(f"{color.ERROR}Slack member ID? ")
-    except:
+    except:  # noqa: E722
         print("Invalid user,\ndid you use special chars?")
         return "my"
     return user
@@ -401,6 +401,7 @@ while True:
 
         for lang_name, lang_alltime, lang_today in rows:
             if int(lang_alltime.translate(str.maketrans("", "", "hm "))) > 10:
+                lang_name = lang_name[:13]
                 print(f"│{color.TEXT}{lang_name:^13}{color.BORDER}│{color.TIME}{lang_today:^7}{color.BORDER}│{color.TIME}{lang_alltime:^8}{color.BORDER}│")
 
         print("╞═════════════╧═══════╧════════╡")
