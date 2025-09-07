@@ -1,18 +1,13 @@
 import requests
-import json
 from datetime import datetime
 import os
 import sys
-import random
 import time
 import threading
 import shutil
-import math
 import configparser
 from pathlib import Path
 import schedule
-import traceback
-import re
 
 wakatime_config = configparser.ConfigParser()
 home = Path.home()
@@ -60,12 +55,13 @@ else:
             tty.setcbreak(fd)
             while True:
                 global listening
-                if listening == True:
+                if listening:
                     dr, _, _ = select.select([sys.stdin], [], [], 0.05)
                     if dr: 
                         key = sys.stdin.read(1)
                         callback(key)
-        finally: termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
+        finally:
+            termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
 
 def safe_input(prompt = "> "):
     global listening
@@ -203,15 +199,15 @@ def get_user():
     print("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n") #clear
     print(f"{color.BORDER}╭──────────────────────────────╮")
     print(f"│{color.TITLE}HackaCLIme: {color.TEXT}{read(api_response.TODAY, "data.username"):>18}{color.BORDER}│")
-    print(f"╞══════════════════════════════╡")
+    print("╞══════════════════════════════╡")
     if read(api_response.TODAY, "data.human_readable_total") != "":
         print(f"│{color.TITLE}Time Today: {color.TIME}{read(api_response.TODAY, "data.human_readable_total"): <15}{color.TITLE}of {color.BORDER}│")
     else:
         print(f"│{color.TITLE}Time Today: {color.ERROR}No time today!    {color.BORDER}│")
     print(f"│{color.TITLE}Total Time: {color.TIME}{read(api_response.ALLTIME, "data.human_readable_total"): <18}{color.BORDER}│")
-    print(f"╞═════════════╤═══════╤════════╡")
+    print("╞═════════════╤═══════╤════════╡")
     print(f"│   {color.TITLE}Language  {color.BORDER}│ {color.TITLE}Today {color.BORDER}│ {color.TITLE}Total  {color.BORDER}│")
-    print(f"├┄┄┄┄┄┄┄┄┄┄┄┄┄┼┄┄┄┄┄┄┄┼┄┄┄┄┄┄┄┄┤")
+    print("├┄┄┄┄┄┄┄┄┄┄┄┄┄┼┄┄┄┄┄┄┄┼┄┄┄┄┄┄┄┄┤")
 
     rows = get_language_times(api_response.ALLTIME, api_response.TODAY)
 
@@ -219,14 +215,14 @@ def get_user():
         if int(lang_alltime.translate(str.maketrans("", "", "hm "))) > 10:
             print(f"│{color.TEXT}{lang_name:^13}{color.BORDER}│{color.TIME}{lang_today:^7}{color.BORDER}│{color.TIME}{lang_alltime:^8}{color.BORDER}│")
 
-    print(f"╞═════════════╧═══════╧════════╡")
+    print("╞═════════════╧═══════╧════════╡")
     print(f"│{color.TITLE}Top Projects                  {color.BORDER}│")
     if read(api_response.TODAYPROJ, "data.projects.0.text") != "No work today!":
         print(f"│{color.TITLE}today: {color.TEXT}{read(api_response.TODAYPROJ, "data.projects.0.name"):>14}  {color.TIME}{read(api_response.TODAYPROJ, "data.projects.0.text"):>7}{color.BORDER}│")
     else:
         print(f"│{color.TITLE}today:    {color.ERROR}No work done today! {color.BORDER}│")
     print(f"│{color.TITLE}total: {color.TEXT}{read(api_response.ALLPROJ, "data.projects.0.name"):>14} {color.TIME}{read(api_response.ALLPROJ, "data.projects.0.text"):>8}{color.BORDER}│")
-    print(f"╰──────────────────────────────╯\n")
+    print("╰──────────────────────────────╯\n")
     print(f"{color.TITLE}Type {color.TEXT}\"my\" {color.TITLE}for your profile.")
     try:
         user = safe_input(f"{color.ERROR}Slack member ID? ")
@@ -242,7 +238,7 @@ def theme_menu():
         print("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n")
         print(f"{color.BORDER}╭──────────────────────────────╮")
         print(f"│ {color.TITLE}HackaCLIme:     {color.TEXT}Change Theme{color.BORDER} │")
-        print(f"╞══════════════════════════════╡")
+        print("╞══════════════════════════════╡")
 
         i = 0
         themelist = []
@@ -255,9 +251,9 @@ def theme_menu():
                     print(f"│{color.TIME}{i:>2}: {color.TEXT}{index:>25} {color.BORDER}│")
             i += 1
         
-        print(f"╞═══════════╤═══════════╤══════╡")
+        print("╞═══════════╤═══════════╤══════╡")
         print(f"│{color.TITLE}Type number{color.BORDER}│{color.TITLE}[{color.ERROR}{color.UNDERLINE}{color.BOLD}n{color.RESET}{color.TITLE}]ew theme{color.BORDER}│{color.TITLE}[{color.ERROR}{color.UNDERLINE}{color.BOLD}b{color.RESET}{color.TITLE}]ack{color.BORDER}│")
-        print(f"╰───────────┴───────────┴──────╯")
+        print("╰───────────┴───────────┴──────╯")
         num = safe_input(f"{color.TITLE}> ")
         if num == "n":
             create_theme()
@@ -292,7 +288,7 @@ def theme_menu():
         print(f"{color.BORDER}│ {color.TITLE}Program box borders: \x1b[38;2;{border[0]};{border[1]};{border[2]}m╞╪╡░▒▓█{color.BORDER} │")
         print(f"{color.BORDER}╞════════════╤═════╤════╤══════╡")
         print(f"{color.BORDER}│ {color.TITLE}Use theme? {color.BORDER}│{color.TITLE}[{color.ERROR}{color.UNDERLINE}{color.BOLD}y{color.RESET}{color.TITLE}]es{color.BORDER}│{color.TITLE}[{color.ERROR}{color.UNDERLINE}{color.BOLD}n{color.RESET}{color.TITLE}]o{color.BORDER}│{color.TITLE}[{color.ERROR}{color.UNDERLINE}{color.BOLD}b{color.RESET}{color.TITLE}]ack{color.BORDER}│")
-        print(f"╰────────────┴─────┴────┴──────╯")
+        print("╰────────────┴─────┴────┴──────╯")
         choice = safe_input(f"{color.TITLE}> ")
         if choice == "y":
             load_theme(themes, theme)
@@ -374,7 +370,7 @@ while True:
     if api_response.ALLTIME == "unset":
         request()
 
-    if doquit == True:
+    if doquit:
         sys.exit(0)
 
     if lines < 16:
@@ -387,19 +383,19 @@ while True:
         print("Please increase your size.")
         time.sleep(5)
 
-    elif active == True:
+    elif active:
         print("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n") #clear
         print(f"{color.BORDER}╭──────────────────────────────╮")
         print(f"│{color.TITLE}HackaCLIme: {color.TEXT}{read(api_response.TODAY, "data.username"):>18}{color.BORDER}│")
-        print(f"╞══════════════════════════════╡")
+        print("╞══════════════════════════════╡")
         if read(api_response.TODAY, "data.human_readable_total") != "":
             print(f"│{color.TITLE}Time Today: {color.TIME}{read(api_response.TODAY, "data.human_readable_total"): <15}{color.TITLE}of {color.BORDER}│")
         else:
             print(f"│{color.TITLE}Time Today: {color.ERROR}No time today!    {color.BORDER}│")
         print(f"│{color.TITLE}Total Time: {color.TIME}{read(api_response.ALLTIME, "data.human_readable_total"): <18}{color.BORDER}│")
-        print(f"╞═════════════╤═══════╤════════╡")
+        print("╞═════════════╤═══════╤════════╡")
         print(f"│   {color.TITLE}Language  {color.BORDER}│ {color.TITLE}Today {color.BORDER}│ {color.TITLE}Total  {color.BORDER}│")
-        print(f"├┄┄┄┄┄┄┄┄┄┄┄┄┄┼┄┄┄┄┄┄┄┼┄┄┄┄┄┄┄┄┤")
+        print("├┄┄┄┄┄┄┄┄┄┄┄┄┄┼┄┄┄┄┄┄┄┼┄┄┄┄┄┄┄┄┤")
 
         rows = get_language_times(api_response.ALLTIME, api_response.TODAY)
 
@@ -407,15 +403,15 @@ while True:
             if int(lang_alltime.translate(str.maketrans("", "", "hm "))) > 10:
                 print(f"│{color.TEXT}{lang_name:^13}{color.BORDER}│{color.TIME}{lang_today:^7}{color.BORDER}│{color.TIME}{lang_alltime:^8}{color.BORDER}│")
 
-        print(f"╞═════════════╧═══════╧════════╡")
+        print("╞═════════════╧═══════╧════════╡")
         print(f"│{color.TITLE}Top Projects                  {color.BORDER}│")
         if read(api_response.TODAYPROJ, "data.projects.0.text") != "No work today!":
             print(f"│{color.TITLE}today: {color.TEXT}{read(api_response.TODAYPROJ, "data.projects.0.name"):>14}  {color.TIME}{read(api_response.TODAYPROJ, "data.projects.0.text"):>7}{color.BORDER}│")
         else:
             print(f"│{color.TITLE}today:    {color.ERROR}No work done today! {color.BORDER}│")
         print(f"│{color.TITLE}total: {color.TEXT}{read(api_response.ALLPROJ, "data.projects.0.name"):>14} {color.TIME}{read(api_response.ALLPROJ, "data.projects.0.text"):>8}{color.BORDER}│")
-        print(f"╞══════════╤════════╤══════════╡")
+        print("╞══════════╤════════╤══════════╡")
         print(f"│ {color.TITLE}[{color.BOLD}{color.UNDERLINE}{color.ERROR}t{color.RESET}{color.TITLE}]hemes {color.BORDER}│ {color.TITLE}[{color.BOLD}{color.UNDERLINE}{color.ERROR}u{color.RESET}{color.TITLE}]ser {color.BORDER}│ {color.TITLE}[{color.BOLD}{color.UNDERLINE}{color.ERROR}q{color.RESET}{color.TITLE}]uit {color.ERROR}:({color.BORDER}│")
-        print(f"╰──────────┴────────┴──────────╯")
+        print("╰──────────┴────────┴──────────╯")
 
         time.sleep(1) # customize speed?
