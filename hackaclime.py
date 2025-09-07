@@ -24,10 +24,10 @@ api_url = wakatime_config["settings"]["api_url"]
 api_key = wakatime_config["settings"]["api_key"]
 req_user = "my"
 
-
 themes = configparser.ConfigParser()
 theme_path = f"{os.path.dirname(os.path.abspath(__file__))}/hackaclime.cfg"
 themes.read(theme_path)
+theme = themes["DEFAULT"]["currenttheme"]
 
 doquit = False
 active = True
@@ -68,12 +68,15 @@ else:
         finally: termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
 
 def safe_input(prompt = "> "):
+    global listening
+    listening = False
     if not sys.platform.startswith("win"):
         termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
     try:
         return input(prompt)
     finally:
         tty.setcbreak(fd)
+        listening = True
 
 def handle_exception(exc_type, exc_value, exc_traceback):
     if exc_type is KeyboardInterrupt:
@@ -99,10 +102,22 @@ class color:
     UNDERLINE = "\x1b[4m"
     BLINK = "\x1b[5m"
 
-def set_color(themes):
-    color.TIME = "red"
+def load_theme(themes, theme_in):
+    global theme
+    theme = theme_in
+    themes["DEFAULT"]["currenttheme"] = theme
+    time = themes[theme]["time"].split(", ")
+    text = themes[theme]["text"].split(", ")
+    title = themes[theme]["title"].split(", ")
+    error = themes[theme]["error"].split(", ")
+    border = themes[theme]["border"].split(", ")
+    color.TIME = f"\x1b[38;2;{time[0]};{time[1]};{time[2]}m"
+    color.TEXT = f"\x1b[38;2;{text[0]};{text[1]};{text[2]}m"
+    color.TITLE = f"\x1b[38;2;{title[0]};{title[1]};{title[2]}m"
+    color.ERROR = f"\x1b[38;2;{error[0]};{error[1]};{error[2]}m"
+    color.BORDER = f"\x1b[38;2;{border[0]};{border[1]};{border[2]}m"
 
-def get_alltime():
+def get_alltime(): #could have combined these to one function but it works and i'm too lazy to fix
     global req_user
     alltime_response = requests.get(f"https://hackatime.hackclub.com/api/v1/users/{req_user}/stats", headers={"Authorization": f"Bearer {api_key}"})
     return alltime_response.json()
@@ -124,7 +139,7 @@ def get_todayproj():
     todayproj_response = requests.get(f"https://hackatime.hackclub.com/api/v1/users/{req_user}/stats?limit=1&features=projects&start_date={date}", headers={"Authorization": f"Bearer {api_key}"})
     return todayproj_response.json()
 
-def read(data, path, default="response parser brokey"):
+def read(data, path, default=f"{color.ERROR}response parser brokey"):
     keys = path.split(".")
     for key in keys:
         if isinstance(data, dict):
@@ -143,27 +158,27 @@ def read(data, path, default="response parser brokey"):
     return data
 
 def handle_key(key: str):
-    if key == "o":
-        print("yay it fuckin uhhhhhhh worked")
+    global active
+    if key == "t":
+        active = False
+        theme_menu()
+        active = True
     elif key == "q":
         global doquit
         doquit = True
     elif key == "u":
-        global active
         active = False
-        global listening
         global req_user
-        listening = False
         req_user = get_user()
         request()
-        if read(api_response.TODAY, "data.username") == "response parser brokey":
-            print("Invalid user!")
+        if read(api_response.TODAY, "data.username") == f"{color.ERROR}response parser brokey":
+            print(f"{color.ERROR}Invalid user!")
             time.sleep(3)
             req_user = "my"
+            request()
         active = True
-        listening = True
     else:
-        print(f"Pressed {key}")
+        pass # other functions might need to go here?
 
 def request():
     api_response.ALLTIME = get_alltime()
@@ -216,6 +231,50 @@ def get_user():
     user = safe_input(f"{color.ERROR}Slack member ID? ")
     return user
 
+def theme_menu():
+    global themes
+
+    print("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n")
+    print(f"{color.BORDER}╭──────────────────────────────╮")
+    print(f"│ {color.TITLE}HackaCLIme:     {color.TEXT}Change Theme{color.BORDER} │")
+    print(f"╞══════════════════════════════╡")
+
+    i = 0
+    themelist = []
+    for index in themes:
+        themelist.append(index)
+        if index != "DEFAULT":
+            if index == themes["DEFAULT"]["currenttheme"]:
+                print(f"│{color.TIME}{i:>2} {color.TITLE}(Current): {color.TEXT}{themes["DEFAULT"]["currenttheme"]:>15} {color.BORDER}│")
+            else:
+                print(f"│{color.TIME}{i:>2}: {color.TEXT}{index:>25} {color.BORDER}│")
+        i += 1
+    
+    print(f"╞══════════════════════════════╡")
+    print(f"│{color.TITLE}Select theme's number to view {color.BORDER}│")
+    print(f"╰──────────────────────────────╯")
+    num = safe_input(f"{color.TITLE}> ")
+    
+    theme = themelist[int(num)]
+    time = themes[theme]["time"].split(", ")
+    text = themes[theme]["text"].split(", ")
+    title = themes[theme]["title"].split(", ")
+    error = themes[theme]["error"].split(", ")
+    border = themes[theme]["border"].split(", ")
+
+    print(f"{color.BORDER}╭──────────────────────────────╮")
+    print(f"{color.BORDER}│ {color.TITLE}Theme:       {color.TEXT}{theme:>16}{color.BORDER}│")
+    print(f"{color.BORDER}╞══════════════════════════════╡")
+    print(f"{color.BORDER}│ {color.TITLE}Numbers and time: \x1b[38;2;{time[0]};{time[1]};{time[2]}m69h 42m 0s{color.BORDER} │")
+    print(f"{color.BORDER}│ {color.TITLE}Variable text fields: \x1b[38;2;{text[0]};{text[1]};{text[2]}mabc123{color.BORDER} │")
+    print(f"{color.BORDER}│ {color.TITLE}Titles and prompts: \x1b[38;2;{title[0]};{title[1]};{title[2]}mTitle123{color.BORDER} │")
+    print(f"{color.BORDER}│ {color.TITLE}Error/bad messages: \x1b[38;2;{error[0]};{error[1]};{error[2]}m Oopsies{color.BORDER} │")
+    print(f"{color.BORDER}│ {color.TITLE}Program box borders: \x1b[38;2;{border[0]};{border[1]};{border[2]}m╞╪╡░▒▓█{color.BORDER} │")
+    print(f"{color.BORDER}╞════════════╤═════╤════╤══════╡")
+    print(f"{color.BORDER}│{color.TITLE}Load theme? {color.BORDER}│{color.TITLE}[{color.ERROR}{color.UNDERLINE}{color.BOLD}y{color.RESET}{color.TITLE}]es{color.BORDER}│{color.TITLE}[{color.ERROR}{color.UNDERLINE}{color.BOLD}n{color.RESET}{color.TITLE}]o{color.BORDER}│{color.TITLE}[{color.ERROR}{color.UNDERLINE}{color.BOLD}b{color.RESET}{color.TITLE}]ack{color.BORDER}│")
+    print(f"╰────────────┴─────┴────┴──────╯")
+    safe_input(f"{color.TITLE}> ")
+
 listener_thread = threading.Thread(target=key_listener, args=(handle_key,), daemon = True)
 listener_thread.start()
 
@@ -243,19 +302,7 @@ while True:
         print("Please increase your size.")
         time.sleep(5)
 
-    elif other_user == True:
-        listening = False
-        req_user = get_user()
-        request()
-        if read(api_response.TODAY, "data.username") == "response parser brokey":
-            print("Invalid user!")
-            time.sleep(3)
-            req_user = "my"
-        other_user = False
-        listening = True
-
     elif active == True:
-        print(themes["default"]["text"])
         print("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n") #clear
         print(f"{color.BORDER}╭──────────────────────────────╮")
         print(f"│{color.TITLE}HackaCLIme: {color.TEXT}{read(api_response.TODAY, "data.username"):>18}{color.BORDER}│")
@@ -283,7 +330,7 @@ while True:
             print(f"│{color.TITLE}today:    {color.ERROR}No work done today! {color.BORDER}│")
         print(f"│{color.TITLE}total: {color.TEXT}{read(api_response.ALLPROJ, "data.projects.0.name"):>14} {color.TIME}{read(api_response.ALLPROJ, "data.projects.0.text"):>8}{color.BORDER}│")
         print(f"╞══════════╤════════╤══════════╡")
-        print(f"│{color.TITLE}[{color.BOLD}{color.UNDERLINE}{color.ERROR}o{color.RESET}{color.TITLE}]ptions {color.BORDER}│ {color.TITLE}[{color.BOLD}{color.UNDERLINE}{color.ERROR}u{color.RESET}{color.TITLE}]ser {color.BORDER}│ {color.TITLE}[{color.BOLD}{color.UNDERLINE}{color.ERROR}q{color.RESET}{color.TITLE}]uit {color.ERROR}:({color.BORDER}│")
+        print(f"│ {color.TITLE}[{color.BOLD}{color.UNDERLINE}{color.ERROR}t{color.RESET}{color.TITLE}]hemes {color.BORDER}│ {color.TITLE}[{color.BOLD}{color.UNDERLINE}{color.ERROR}u{color.RESET}{color.TITLE}]ser {color.BORDER}│ {color.TITLE}[{color.BOLD}{color.UNDERLINE}{color.ERROR}q{color.RESET}{color.TITLE}]uit {color.ERROR}:({color.BORDER}│")
         print(f"╰──────────┴────────┴──────────╯")
 
         time.sleep(1) # customize speed?
