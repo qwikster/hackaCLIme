@@ -10,16 +10,13 @@ from pathlib import Path
 import schedule
 
 wakatime_config = configparser.ConfigParser()
-home = Path.home()
-
-wakatime_path = home / ".wakatime.cfg"
-wakatime_config.read(wakatime_path)
+wakatime_config.read([Path.home() / ".wakatime.cfg"], encoding="utf-8-sig")
 
 api_url = wakatime_config["settings"]["api_url"]
 api_key = wakatime_config["settings"]["api_key"]
 req_user = "my"
 
-themes = configparser.ConfigParser()
+themes = configparser.ConfigParser() 
 theme_path = f"{os.path.dirname(os.path.abspath(__file__))}/hackaclime.cfg"
 themes.read(theme_path)
 theme = themes["DEFAULT"]["currenttheme"]
@@ -196,7 +193,7 @@ def get_language_times(alltime, today):
     return result
 
 def get_user():
-    print("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n") #clear
+    print("\033[2J") #clear
     print(f"{color.BORDER}╭──────────────────────────────╮")
     username = read(api_response.TODAY, "data.username")
     username = username[:18]
@@ -243,7 +240,7 @@ def theme_menu():
     global themes
     global theme_path
     while(1):
-        print("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n")
+        print("\033[2J")
         print(f"{color.BORDER}╭──────────────────────────────╮")
         print(f"│ {color.TITLE}HackaCLIme:     {color.TEXT}Change Theme{color.BORDER} │")
         print("╞══════════════════════════════╡")
@@ -398,7 +395,7 @@ def main():
                 continue
 
             if active:
-                print("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n")
+                print("\033[2J")
                 print(f"{color.BORDER}╭──────────────────────────────╮")
                 username = read(api_response.TODAY, "data.username")
                 username = username[:18]
