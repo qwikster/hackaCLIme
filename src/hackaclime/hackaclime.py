@@ -29,6 +29,19 @@ listening = True
 old_settings = None
 fd = None
 
+actual_print = print
+buffer = ""
+def print_buffer() -> None:
+    global buffer
+    actual_print(buffer, end="")
+    buffer = ""
+
+def print(*v, sep=" ", end="\n", flush=False) -> None:
+    global buffer
+    buffer += sep.join(v) + end
+    if flush:
+        print_buffer()
+
 if sys.platform.startswith("win"):
     import msvcrt
 
@@ -68,12 +81,14 @@ def safe_input(prompt = "> "):
     try:
         return input(prompt)
     finally:
-        tty.setcbreak(fd)
+        if not sys.platform.startswith("win"):
+            tty.setcbreak(fd)
         listening = True
 
 def handle_exception(exc_type, exc_value, exc_traceback):
     if exc_type is KeyboardInterrupt:
         print("goodbye :(")
+        print_buffer()
         sys.exit(0)
     else:
         sys.__excepthook__(exc_type, exc_value, exc_traceback)
@@ -166,6 +181,7 @@ def handle_key(key: str):
         request()
         if read(api_response.TODAY, "data.username") == f"{color.ERROR}response parser brokey":
             print(f"{color.ERROR}Invalid user!")
+            print_buffer()
             time.sleep(3)
             req_user = "my"
             request()
@@ -193,7 +209,7 @@ def get_language_times(alltime, today):
     return result
 
 def get_user():
-    print("\033[2J") #clear
+    print("\033[2J\033[H", end="")
     print(f"{color.BORDER}╭──────────────────────────────╮")
     username = read(api_response.TODAY, "data.username")
     username = username[:18]
@@ -229,10 +245,12 @@ def get_user():
     proja_name = proja_name[:14]
     print("╰──────────────────────────────╯\n")
     print(f"{color.TITLE}Type {color.TEXT}\"my\" {color.TITLE}for your profile.")
+    print_buffer()
     try:
         user = safe_input(f"{color.ERROR}Slack member ID? ")
     except:  # noqa: E722
         print("Invalid user,\ndid you use special chars?")
+        print_buffer()
         return "my"
     return user
 
@@ -240,7 +258,7 @@ def theme_menu():
     global themes
     global theme_path
     while(1):
-        print("\033[2J")
+        print("\033[2J\033[H", end="")
         print(f"{color.BORDER}╭──────────────────────────────╮")
         print(f"│ {color.TITLE}HackaCLIme:     {color.TEXT}Change Theme{color.BORDER} │")
         print("╞══════════════════════════════╡")
@@ -259,6 +277,7 @@ def theme_menu():
         print("╞═══════════╤═══════════╤══════╡")
         print(f"│{color.TITLE}Type number{color.BORDER}│{color.TITLE}[{color.ERROR}{color.UNDERLINE}{color.BOLD}n{color.RESET}{color.TITLE}]ew theme{color.BORDER}│{color.TITLE}[{color.ERROR}{color.UNDERLINE}{color.BOLD}b{color.RESET}{color.TITLE}]ack{color.BORDER}│")
         print("╰───────────┴───────────┴──────╯")
+        print_buffer()
         num = safe_input(f"{color.TITLE}> ")
         if num == "n":
             create_theme()
@@ -268,11 +287,13 @@ def theme_menu():
         elif num.isdigit():
             if (int(num) > len(themelist) - 1) or (int(num) < 1):
                 print(f"{color.ERROR}Not an option, learn to count!")
+                print_buffer()
                 time.sleep(2)
                 break
             pass
         else:
             print(f"{color.ERROR}Invalid input!")
+            print_buffer()
             time.sleep(2)
             break
 
@@ -283,6 +304,7 @@ def theme_menu():
         error = themes[theme]["error"].split(", ")
         border = themes[theme]["border"].split(", ")
 
+        print("\033[2J\033[H", end="")
         print(f"{color.BORDER}╭──────────────────────────────╮")
         print(f"{color.BORDER}│ {color.TITLE}Theme: {color.TEXT}{theme:>21}{color.BORDER} │")
         print(f"{color.BORDER}╞══════════════════════════════╡")
@@ -294,6 +316,7 @@ def theme_menu():
         print(f"{color.BORDER}╞════════════╤═════╤════╤══════╡")
         print(f"{color.BORDER}│ {color.TITLE}Use theme? {color.BORDER}│{color.TITLE}[{color.ERROR}{color.UNDERLINE}{color.BOLD}y{color.RESET}{color.TITLE}]es{color.BORDER}│{color.TITLE}[{color.ERROR}{color.UNDERLINE}{color.BOLD}n{color.RESET}{color.TITLE}]o{color.BORDER}│{color.TITLE}[{color.ERROR}{color.UNDERLINE}{color.BOLD}b{color.RESET}{color.TITLE}]ack{color.BORDER}│")
         print("╰────────────┴─────┴────┴──────╯")
+        print_buffer()
         choice = safe_input(f"{color.TITLE}> ")
         if choice == "y":
             load_theme(themes, theme)
@@ -301,6 +324,7 @@ def theme_menu():
             with open(theme_path, 'w') as configfile:
                 themes.write(configfile)
             print("Success!")
+            print_buffer()
             break
         elif choice == "b":
             break
@@ -308,28 +332,33 @@ def theme_menu():
             pass
         else:
             print(f"{color.ERROR}Invalid input!")
+            print_buffer()
             time.sleep(2)
             break
 
 def create_theme():
     global theme_path
     global themes
+    print("\033[2J\033[H", end="")
     print(f"{color.TITLE}Creating new theme...")
     print(f"{color.TITLE}Input {color.ERROR}r, g, b{color.TITLE} / {color.ERROR}hex{color.TITLE} only. (No {color.ERROR}#{color.TITLE})")
     print(f"{color.TITLE}(Don't forget commas for RGB!)\n")
     print(f"{color.TITLE}Choose a name for your theme")
     print(f"{color.TITLE}(lowercase, alphanumeric)\n")
+    print_buffer()
     name = safe_input("> ")
     name = name.translate(str.maketrans('', '', "!@#$%^&*()[]\"\'/}{"))
     themes[name] = {}
     for index in ["time", "text", "title", "error", "border"]:
         while(1):
             print(f"{color.TITLE}Input color for {index}s...")
+            print_buffer()
             choice = safe_input(f"{color.TITLE}> ")
             if "," in choice:
                 try:
                     col = choice.split(", ")
-                    print(f"\x1b[38;2;{col[0]};{col[1]};{col[2]}mIs this the correct color?")
+                    print(f"\x1b[38;2;{col[0]};{col[1]};{col[2]}mIs this the correct color? ░▒▓█")
+                    print_buffer()
                     yn = safe_input("y/n > ")
                     if yn == "y":
                         break
@@ -337,6 +366,7 @@ def create_theme():
                         pass
                 except ValueError:
                     print("Invalid value, try again...")
+                    print_buffer()
                     time.sleep(2)
                     pass
             elif len(choice) == 6:
@@ -345,6 +375,7 @@ def create_theme():
                     r, g, b = col
                     col = f"{r}, {g}, {b}"
                     print(f"\x1b[38;2;{r};{g};{b}mIs this the correct color? ░▒▓█")
+                    print_buffer()
                     yn = safe_input("y/n > ")
                     if yn == "y":
                         break
@@ -352,9 +383,11 @@ def create_theme():
                         pass
                 except ValueError:
                     print("Invalid value, try again...")
+                    print_buffer()
                     time.sleep(2)
             else:
                 print("Invalid string? Try again")
+                print_buffer()
         themes[name][index] = col
         with open(theme_path, 'w') as configfile:
             themes.write(configfile)
@@ -385,17 +418,19 @@ def main():
             if lines < 16:
                 print("Terminal is smaller than 16 lines!")
                 print("Please increase your terminal window size")
+                print_buffer()
                 time.sleep(5)
                 continue
 
             if cols < 32:
                 print("Terminal smaller than 32 cols!")
                 print("Please increase your size.")
+                print_buffer()
                 time.sleep(5)
                 continue
 
             if active:
-                print("\033[2J")
+                print("\033[2J\033[H", end="")
                 print(f"{color.BORDER}╭──────────────────────────────╮")
                 username = read(api_response.TODAY, "data.username")
                 username = username[:18]
@@ -429,6 +464,7 @@ def main():
                 print("╞══════════╤════════╤══════════╡")
                 print(f"│ {color.TITLE}[{color.BOLD}{color.UNDERLINE}{color.ERROR}t{color.RESET}{color.TITLE}]hemes {color.BORDER}│ {color.TITLE}[{color.BOLD}{color.UNDERLINE}{color.ERROR}u{color.RESET}{color.TITLE}]ser {color.BORDER}│ {color.TITLE}[{color.BOLD}{color.UNDERLINE}{color.ERROR}q{color.RESET}{color.TITLE}]uit {color.ERROR}:({color.BORDER}│")
                 print("╰──────────┴────────┴──────────╯")
+                print_buffer()
 
             time.sleep(1)
 
@@ -444,3 +480,5 @@ def main():
 
 if __name__ == "__main__":
     main()
+    
+
