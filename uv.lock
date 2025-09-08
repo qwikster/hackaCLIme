@@ -55,7 +55,7 @@ wheels = [
 
 [[package]]
 name = "hackaclime"
-version = "0.1.7"
+version = "0.1.9"
 source = { editable = "." }
 dependencies = [
     { name = "requests" },

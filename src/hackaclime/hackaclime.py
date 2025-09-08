@@ -383,8 +383,7 @@ def create_theme():
     
     print("\033[2J\033[H", end="")
     print(f"{color.TITLE}Creating new theme...")
-    print(f"{color.TITLE}Input {color.ERROR}r, g, b{color.TITLE} / {color.ERROR}hex{color.TITLE} only. (No {color.ERROR}#{color.TITLE})")
-    print(f"{color.TITLE}(Don't forget commas for RGB!)\n")
+    print(f"{color.TITLE}Input {color.ERROR}hex{color.TITLE} only. (No {color.ERROR}#{color.TITLE})")
     print(f"{color.TITLE}Choose a name for your theme")
     print(f"{color.TITLE}(lowercase, alphanumeric)\n")
     
@@ -407,7 +406,6 @@ def create_theme():
                     print(f"\x1b[38;2;{col[0]};{col[1]};{col[2]}mIs this the correct color? ░▒▓█")
                     print_buffer()
                     yn = safe_input("y/n > ")
-                    
                     if yn == "y":
                         break
                     else:
